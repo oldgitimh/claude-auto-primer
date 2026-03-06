@@ -10,21 +10,23 @@ let profiles = [];
 let activeProfileId = null;
 let saveTimer = null;
 
-const DEFAULT_PRIMER_TEXT = `Welcome! This message was sent automatically by the Claude Auto-Primer extension.
+const DEFAULT_PRIMER_TEXT = `This message was automatically sent by a Chrome extension called "Claude Auto-Primer." The extension injects a message like this at the start of every new Claude conversation, before the user types anything. Its purpose is to give you (Claude) standing instructions, preferences, or context that the user wants applied to every conversation without having to type them out each time.
 
-HOW TO USE:
-1. Replace this text with your own primer instructions
-2. Create multiple profiles for different use cases (e.g. Coding, Writing, Research)
-3. Switch profiles from the dropdown in the extension popup
-4. Toggle the checkbox to enable/disable auto-sending
+Claude can sometimes lose track of instructions during long conversations. This extension ensures your preferences and rules are always present at the start of every session, reinforcing them where they matter most.
 
-Your primer will be sent automatically whenever you open a new Claude chat.`;
+This is the default template, which means the user has just installed the extension and hasn't written their own instructions yet. Please welcome them, briefly confirm that the extension is working, and suggest some examples of what they could put here, such as:
+
+Formatting preferences (e.g. "keep responses concise" or "avoid bullet points")
+Any standing rules (e.g. "always use UK English spelling")
+Rules to reduce AI-sounding output (e.g. "never use em dashes," "avoid words like delve, straightforward, and leverage," "don't start responses with Sure! or Great question!")
+
+Let them know they can customise this message by clicking the extension icon in their browser toolbar, and that they can create multiple profiles for different use cases. Keep your response brief.`;
 
 function createDefaultProfile() {
   const id = crypto.randomUUID();
   const defaultProfiles = [{ id, name: 'Getting Started', text: DEFAULT_PRIMER_TEXT }];
-  chrome.storage.local.set({ profiles: defaultProfiles, activeProfileId: id });
-  return { profiles: defaultProfiles, activeProfileId: id };
+  chrome.storage.local.set({ enabled: true, profiles: defaultProfiles, activeProfileId: id });
+  return { enabled: true, profiles: defaultProfiles, activeProfileId: id };
 }
 
 // Migration: convert old flat primerText to profiles format
@@ -34,12 +36,12 @@ function migrateIfNeeded(result) {
     const migrated = [{ id, name: 'Default', text: result.primerText }];
     chrome.storage.local.set({ profiles: migrated, activeProfileId: id });
     chrome.storage.local.remove('primerText');
-    return { profiles: migrated, activeProfileId: id };
+    return { profiles: migrated, activeProfileId: id, enabled: result.enabled };
   }
   if (!result.profiles || result.profiles.length === 0) {
     return createDefaultProfile();
   }
-  return { profiles: result.profiles, activeProfileId: result.activeProfileId ?? null };
+  return { profiles: result.profiles, activeProfileId: result.activeProfileId ?? null, enabled: result.enabled };
 }
 
 function renderProfileSelect() {
@@ -92,8 +94,8 @@ function save() {
 
 // Load saved settings
 chrome.storage.local.get(['enabled', 'primerText', 'profiles', 'activeProfileId'], (result) => {
-  enabledCheckbox.checked = result.enabled ?? false;
   const migrated = migrateIfNeeded(result);
+  enabledCheckbox.checked = migrated.enabled ?? result.enabled ?? false;
   profiles = migrated.profiles;
   activeProfileId = migrated.activeProfileId;
   renderProfileSelect();

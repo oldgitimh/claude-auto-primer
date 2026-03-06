@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Claude Auto-Primer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Automatically sends a primer message when opening a new Claude.ai chat.",
+  "homepage_url": "https://github.com/oldgitimh/claude-auto-primer",
   "permissions": ["storage"],
   "icons": {
     "16": "icon16.png",

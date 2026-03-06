@@ -9,7 +9,6 @@
       'button[data-testid="send-button"]',
       'button[aria-label="Send message"]'
     ],
-    responses: '.standard-markdown, .progressive-markdown',
     streaming: '[data-is-streaming="true"]'
   };
 
@@ -23,6 +22,29 @@
     if (!activeProfileId || !profiles.length) return '';
     const profile = profiles.find(p => p.id === activeProfileId);
     return profile?.text ?? '';
+  }
+
+  const WELCOME_PRIMER = `This message was automatically sent by a Chrome extension called "Claude Auto-Primer." The extension injects a message like this at the start of every new Claude conversation, before the user types anything. Its purpose is to give you (Claude) standing instructions, preferences, or context that the user wants applied to every conversation without having to type them out each time.
+
+Claude can sometimes lose track of instructions during long conversations. This extension ensures your preferences and rules are always present at the start of every session, reinforcing them where they matter most.
+
+This is the default template, which means the user has just installed the extension and hasn't written their own instructions yet. Please welcome them, briefly confirm that the extension is working, and suggest some examples of what they could put here, such as:
+
+Formatting preferences (e.g. "keep responses concise" or "avoid bullet points")
+Any standing rules (e.g. "always use UK English spelling")
+Rules to reduce AI-sounding output (e.g. "never use em dashes," "avoid words like delve, straightforward, and leverage," "don't start responses with Sure! or Great question!")
+
+Let them know they can customise this message by clicking the extension icon in their browser toolbar, and that they can create multiple profiles for different use cases. Keep your response brief.`;
+
+  // First install: seed default profile with welcome primer, enabled by default
+  function initIfFirstInstall(result) {
+    if (!result.profiles && !result.primerText && result.enabled === undefined) {
+      const id = crypto.randomUUID();
+      const seeded = [{ id, name: 'Getting Started', text: WELCOME_PRIMER }];
+      chrome.storage.local.set({ enabled: true, profiles: seeded, activeProfileId: id });
+      return { enabled: true, profiles: seeded, activeProfileId: id };
+    }
+    return null;
   }
 
   // Migration: convert old flat primerText to profiles format
@@ -39,11 +61,17 @@
 
   // Load settings, then attempt primer
   chrome.storage.local.get(['enabled', 'primerText', 'profiles', 'activeProfileId'], (result) => {
-    enabled = result.enabled ?? false;
-    const migrated = migrateIfNeeded(result);
-    profiles = migrated.profiles;
-    activeProfileId = migrated.activeProfileId;
-    console.log('[Auto-Primer] Settings loaded', { enabled, activeProfileId, profileCount: profiles.length });
+    const firstInstall = initIfFirstInstall(result);
+    if (firstInstall) {
+      enabled = firstInstall.enabled;
+      profiles = firstInstall.profiles;
+      activeProfileId = firstInstall.activeProfileId;
+    } else {
+      enabled = result.enabled ?? false;
+      const migrated = migrateIfNeeded(result);
+      profiles = migrated.profiles;
+      activeProfileId = migrated.activeProfileId;
+    }
     tryPrimer();
   });
 
@@ -83,19 +111,9 @@
     });
   }
 
-  function getResponseCount() {
-    const all = document.querySelectorAll(SELECTORS.responses);
-    let count = 0;
-    all.forEach(el => {
-      if (!el.closest('div.rounded-lg.border-border-300')) count++;
-    });
-    return count;
-  }
-
   function isFreshChat() {
     const path = location.pathname;
-    const isChatUrl = path === '/new' || /^\/chat\/[a-f0-9-]+$/.test(path);
-    return isChatUrl && getResponseCount() === 0;
+    return path === '/new' || /^\/project\/[a-f0-9-]+$/.test(path);
   }
 
   async function injectAndSend(text) {
@@ -103,7 +121,6 @@
     try {
       input = await waitForElement(SELECTORS.input);
     } catch {
-      console.warn('[Auto-Primer] Input field not found');
       return;
     }
 
@@ -130,7 +147,7 @@
 
     // Fallback: click send button after a short delay if message wasn't sent
     await new Promise(r => setTimeout(r, 500));
-    if (getResponseCount() === 0 && !document.querySelector(SELECTORS.streaming)) {
+    if (!document.querySelector(SELECTORS.streaming)) {
       const btn = findElement(SELECTORS.sendButton);
       if (btn) btn.click();
     }
@@ -155,7 +172,6 @@
     if (!isFreshChat()) return;
 
     primedUrls.add(location.href);
-    console.log('[Auto-Primer] Sending primer to fresh chat');
     await injectAndSend(primerText);
   }
 
@@ -168,6 +184,4 @@
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
-
-  // Initial load tryPrimer is now called inside the storage callback above
 })();
