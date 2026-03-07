@@ -11,9 +11,7 @@ let profiles = [];
 let activeProfileId = null;
 let saveTimer = null;
 
-const DEFAULT_PRIMER_TEXT = `This message was automatically sent by a Chrome extension called "Claude Auto-Primer." The extension injects a message like this at the start of every new Claude conversation, before the user types anything. Its purpose is to give you (Claude) standing instructions, preferences, or context that the user wants applied to every conversation without having to type them out each time.
-
-Claude can sometimes lose track of instructions during long conversations. This extension ensures your preferences and rules are always present at the start of every session, reinforcing them where they matter most.
+const DEFAULT_PRIMER_TEXT = `This message was automatically sent by a Chrome extension called "Claude Auto-Primer." It injects a primer like this at the start of every new Claude conversation, before the user types anything. Its purpose is to give you standing instructions, preferences, or context that the user wants applied to every conversation without having to type them out each time.
 
 This is the default template, which means the user has just installed the extension and hasn't written their own instructions yet. Please welcome them, briefly confirm that the extension is working, and suggest some examples of what they could put here, such as:
 
@@ -21,9 +19,11 @@ Formatting preferences (e.g. "keep responses concise" or "avoid bullet points")
 Any standing rules (e.g. "always use UK English spelling")
 Rules to reduce AI-sounding output (e.g. "never use em dashes," "avoid words like delve, straightforward, and leverage," "don't start responses with Sure! or Great question!")
 
-The date and time at the top of this message was added automatically by the extension so that the chat gets a useful name in the sidebar.
+A second profile called "Writing Style" is included as an example. You can switch profiles using the dropdown in the extension popup.
 
-Let them know they can customise this message by clicking the extension icon in their browser toolbar, and that they can create multiple profiles for different use cases. Keep your response brief.`;
+If "Auto-rename chat to date/time" is enabled on a profile, the extension will rename this chat in the sidebar to the date, time, and profile name.
+
+Let them know they can customise their primer by clicking the extension icon in the Chrome toolbar. Keep your response brief.`;
 
 const WRITING_STYLE_TEXT = `Use UK English spelling throughout.
 Write in flowing prose with paragraphs rather than bullet points or numbered lists, and avoid bold or italics formatting. Only use lists when truly necessary or explicitly requested.

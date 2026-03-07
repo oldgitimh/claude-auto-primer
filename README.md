@@ -1,24 +1,29 @@
 # Claude Auto-Primer
 
-A Chrome extension that automatically sends a configurable primer message when you open a new chat on [Claude.ai](https://claude.ai). Set your instructions once, and every new conversation starts with the context you need.
+A Chrome extension that automatically sends a primer message at the start of every new Claude.ai conversation. Write your instructions once, and Claude follows them from the first message without you having to repeat yourself.
 
-## Features
+## What it does
 
-- **Auto-send on new chats** — your primer is sent the moment a fresh chat opens
-- **Multiple profiles** — switch between different primers for different workflows
-- **Enable/disable toggle** — turn it off without losing your setup
+When you open a new chat on claude.ai, the extension sends your primer message before you type anything. The message includes a short advice line telling Claude to apply your instructions silently and wait for your first real message, so Claude won't waste a turn acknowledging the primer.
+
+Each primer is stamped with the date and time. If you enable auto-rename on a profile, the extension will also rename the chat in the sidebar to something like "3/7/2026 11:40 AM using Writing Style", making it easy to find later.
+
+The extension comes with two starter profiles. "Getting Started" walks you through how the extension works. "Writing Style" is an example profile with rules for UK English prose and reduced AI-sounding output. Both can be edited or deleted.
 
 ## Installation
 
-Chrome Web Store listing coming soon — awaiting registration.
+Chrome Web Store listing coming soon.
+
+To install manually, download or clone this repository, open chrome://extensions, enable Developer mode, and click "Load unpacked" pointing to the extension folder.
 
 ## Usage
 
-1. Click the extension icon in the Chrome toolbar
-2. Tick **Enable auto-primer**
-3. Type your primer message in the text area — this is the instruction that will be sent at the start of each new chat
-4. To manage multiple primers, click **+ New** to create additional profiles and use the dropdown to switch between them
-5. Open a new chat on [Claude.ai](https://claude.ai) — your primer will be sent automatically
+1. Click the extension icon in the Chrome toolbar.
+2. Tick "Enable auto-primer".
+3. Choose a profile from the dropdown, or click "+ New" to create your own.
+4. Write your primer message in the text area. This is the instruction Claude will receive at the start of every new chat.
+5. Tick "Auto-rename chat to date/time" if you want the chat renamed in the sidebar.
+6. Open a new chat on claude.ai. Your primer is sent automatically.
 
 ## Support
 
@@ -28,4 +33,4 @@ If you find this extension useful, please consider supporting the **Middlesex As
 
 ## License
 
-[MIT](LICENSE) — Copyright (c) 2026 Ian M Hill
+[MIT](LICENSE)
