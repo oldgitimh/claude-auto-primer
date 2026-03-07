@@ -136,15 +136,12 @@ Avoid common AI-generated phrasing such as: In today's, It's important to note, 
   }
 
   async function injectAndSend(text) {
-    console.log('[AutoPrimer] injectAndSend: looking for input element...');
     let input;
     try {
       input = await waitForElement(SELECTORS.input);
     } catch {
-      console.log('[AutoPrimer] ERROR: Input element not found');
       return;
     }
-    console.log('[AutoPrimer] Found input element, injecting text...');
 
     input.focus();
     document.execCommand('selectAll');
@@ -170,16 +167,8 @@ Avoid common AI-generated phrasing such as: In today's, It's important to note, 
     // Fallback: click send button after a short delay if message wasn't sent
     await new Promise(r => setTimeout(r, 500));
     if (!document.querySelector(SELECTORS.streaming)) {
-      console.log('[AutoPrimer] Enter did not trigger send, clicking send button...');
       const btn = findElement(SELECTORS.sendButton);
-      if (btn) {
-        btn.click();
-        console.log('[AutoPrimer] Clicked send button');
-      } else {
-        console.log('[AutoPrimer] ERROR: Send button not found');
-      }
-    } else {
-      console.log('[AutoPrimer] Message sent via Enter key');
+      if (btn) btn.click();
     }
 
     // Wait for the message to actually leave the input
@@ -189,18 +178,14 @@ Avoid common AI-generated phrasing such as: In today's, It's important to note, 
     document.execCommand('delete');
     input.dispatchEvent(new InputEvent('input', { bubbles: true }));
     input.style.color = '';
-    console.log('[AutoPrimer] Cleared input field');
   }
 
   async function tryPrimer() {
-    console.log('[AutoPrimer] tryPrimer called, URL:', location.href);
     const primerText = getActivePrimerText();
     if (!enabled || !primerText.trim()) {
-      console.log('[AutoPrimer] Skipping: enabled=' + enabled + ', text empty=' + !primerText.trim());
       return;
     }
     if (primedUrls.has(location.href)) {
-      console.log('[AutoPrimer] Skipping: URL already primed');
       return;
     }
 
@@ -208,10 +193,8 @@ Avoid common AI-generated phrasing such as: In today's, It's important to note, 
     await new Promise(r => setTimeout(r, 500));
 
     if (!isFreshChat()) {
-      console.log('[AutoPrimer] Skipping: not a fresh chat, path=' + location.pathname);
       return;
     }
-    console.log('[AutoPrimer] Fresh chat detected, proceeding...');
 
     primedUrls.add(location.href);
     const profile = getActiveProfile();
@@ -223,57 +206,44 @@ Avoid common AI-generated phrasing such as: In today's, It's important to note, 
     const shortDate = now.toLocaleDateString();
     const chatName = shortDate + ' ' + time + ' using ' + (profile?.name ?? 'Unknown');
 
-    const fullText = headerTimestamp + '\n\n' + primerText + '\n\nThis chat is named "' + chatName + '". This is for this chat only. Do not check existing memory.';
-    console.log('[AutoPrimer] Sending primer for profile:', profile?.name);
-    console.log('[AutoPrimer] Chat name will be:', chatName);
-    console.log('[AutoPrimer] Full text length:', fullText.length);
+    const advice = 'Auto-sent by Claude Auto-Primer extension. Apply the instructions below silently. Do not respond to this primer; wait for the user\'s first message. This is for this chat only. Do not check existing memory.';
+    const fullText = headerTimestamp + '\n\n' + advice + '\n\n' + primerText;
     await injectAndSend(fullText);
 
     if (profile?.autoRename) {
-      console.log('[AutoPrimer] Auto-rename enabled, will rename chat to:', chatName);
       await renameChat(chatName);
-    } else {
-      console.log('[AutoPrimer] Auto-rename disabled for this profile');
     }
   }
 
   async function renameChat(newName) {
     // Wait for URL to change from /new to /chat/...
-    console.log('[AutoPrimer] Waiting for chat URL redirect...');
     let waited = 0;
     while (location.pathname === '/new' && waited < 15000) {
       await new Promise(r => setTimeout(r, 500));
       waited += 500;
     }
     if (location.pathname === '/new') {
-      console.log('[AutoPrimer] ERROR: URL never redirected from /new after 15s');
       return;
     }
-    console.log('[AutoPrimer] Redirected to:', location.pathname);
 
     // Wait a bit more for the title to render
     await new Promise(r => setTimeout(r, 2000));
 
     const titleBtn = document.querySelector('[data-testid="chat-title-button"]');
     if (!titleBtn) {
-      console.log('[AutoPrimer] ERROR: Chat title button not found');
       return;
     }
-    console.log('[AutoPrimer] Found title button, current text:', titleBtn.textContent.trim());
 
     // Click the title button to enter edit mode
     titleBtn.click();
-    console.log('[AutoPrimer] Clicked title button, waiting for rename input...');
 
     // Wait for the rename input to appear
     let nameInput;
     try {
       nameInput = await waitForElement(['[data-testid="name-chat"]'], 3000);
     } catch {
-      console.log('[AutoPrimer] ERROR: Rename input did not appear');
       return;
     }
-    console.log('[AutoPrimer] Found rename input, current value:', nameInput.value);
 
     // Set the new name
     nameInput.focus();
@@ -281,13 +251,11 @@ Avoid common AI-generated phrasing such as: In today's, It's important to note, 
     nameInput.dispatchEvent(new Event('input', { bubbles: true }));
     nameInput.value = newName;
     nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-    console.log('[AutoPrimer] Set new value:', nameInput.value);
 
     // Press Enter to confirm
     nameInput.dispatchEvent(new KeyboardEvent('keydown', {
       key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true
     }));
-    console.log('[AutoPrimer] Pressed Enter to confirm rename');
   }
 
   // Watch for SPA navigation
