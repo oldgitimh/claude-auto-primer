@@ -1,4 +1,5 @@
 const enabledCheckbox = document.getElementById('enabled');
+const autoRenameCheckbox = document.getElementById('autoRename');
 const profileSelect = document.getElementById('profileSelect');
 const profileNameInput = document.getElementById('profileName');
 const primerTextarea = document.getElementById('primerText');
@@ -20,13 +21,29 @@ Formatting preferences (e.g. "keep responses concise" or "avoid bullet points")
 Any standing rules (e.g. "always use UK English spelling")
 Rules to reduce AI-sounding output (e.g. "never use em dashes," "avoid words like delve, straightforward, and leverage," "don't start responses with Sure! or Great question!")
 
+The date and time at the top of this message was added automatically by the extension so that the chat gets a useful name in the sidebar.
+
 Let them know they can customise this message by clicking the extension icon in their browser toolbar, and that they can create multiple profiles for different use cases. Keep your response brief.`;
 
+const WRITING_STYLE_TEXT = `Use UK English spelling throughout.
+Write in flowing prose with paragraphs rather than bullet points or numbered lists, and avoid bold or italics formatting. Only use lists when truly necessary or explicitly requested.
+Never use em dashes in any form, including the character or the word. Use commas, full stops, colons, semicolons, or parentheses instead.
+Be concise in all responses. Lead with the answer and skip preamble.
+Never create documentation files unless explicitly asked. When editing drafted text, show the updated version in the chat, not in a file.
+Don't start responses with filler phrases like Sure!, Great question!, Absolutely!, or Of course!. Avoid words like delve, straightforward, leverage, utilize, and robust.
+Be direct and honest. Disagree when the user is wrong.
+Use plain, accessible language rather than management speak or corporate jargon. Prefer simple phrasing over formal business terminology.
+Avoid common AI-generated phrasing such as: In today's, It's important to note, In conclusion, Furthermore, Moreover, plays a crucial role, essential, vital, comprehensive, landscape, navigate, foster, empower, holistic, it is worth noting, and firstly/secondly/thirdly. Vary sentence length and structure. Write as a person would, not as a language model would.`;
+
 function createDefaultProfile() {
-  const id = crypto.randomUUID();
-  const defaultProfiles = [{ id, name: 'Getting Started', text: DEFAULT_PRIMER_TEXT }];
-  chrome.storage.local.set({ enabled: true, profiles: defaultProfiles, activeProfileId: id });
-  return { enabled: true, profiles: defaultProfiles, activeProfileId: id };
+  const id1 = crypto.randomUUID();
+  const id2 = crypto.randomUUID();
+  const defaultProfiles = [
+    { id: id1, name: 'Getting Started', text: DEFAULT_PRIMER_TEXT },
+    { id: id2, name: 'Writing Style', text: WRITING_STYLE_TEXT }
+  ];
+  chrome.storage.local.set({ enabled: true, profiles: defaultProfiles, activeProfileId: id1 });
+  return { enabled: true, profiles: defaultProfiles, activeProfileId: id1 };
 }
 
 // Migration: convert old flat primerText to profiles format
@@ -61,9 +78,11 @@ function loadActiveProfile() {
   if (profile) {
     profileNameInput.value = profile.name;
     primerTextarea.value = profile.text;
+    autoRenameCheckbox.checked = profile.autoRename ?? false;
   } else {
     profileNameInput.value = '';
     primerTextarea.value = '';
+    autoRenameCheckbox.checked = false;
   }
 }
 
@@ -80,6 +99,7 @@ function save() {
     if (profile) {
       profile.name = profileNameInput.value;
       profile.text = primerTextarea.value;
+      profile.autoRename = autoRenameCheckbox.checked;
       // Update dropdown label
       const opt = profileSelect.querySelector(`option[value="${profile.id}"]`);
       if (opt) opt.textContent = profile.name;
@@ -134,5 +154,6 @@ deleteProfileBtn.addEventListener('click', () => {
 
 // Auto-save on edits
 enabledCheckbox.addEventListener('change', save);
+autoRenameCheckbox.addEventListener('change', save);
 profileNameInput.addEventListener('input', save);
 primerTextarea.addEventListener('input', save);
