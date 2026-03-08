@@ -10,11 +10,20 @@ Each primer is stamped with the date and time. If you enable auto-rename on a pr
 
 The extension comes with two starter profiles. "Getting Started" walks you through how the extension works. "Writing Style" is an example profile with rules for UK English prose and reduced AI-sounding output. Both can be edited or deleted.
 
+## Screenshots
+
+![Extension settings popup](store/setup.png)
+![Primer in action on Claude.ai](store/inuse.png)
+
 ## Installation
 
-Chrome Web Store listing coming soon.
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/claude-auto-primer/oigeoochimcjojcdnbcbbkcldpninpbp)**
 
-To install manually, download or clone this repository, open chrome://extensions, enable Developer mode, and click "Load unpacked" pointing to the extension folder.
+Or install manually: download or clone this repository, open chrome://extensions, enable Developer mode, and click "Load unpacked" pointing to the extension folder.
+
+## Privacy
+
+Only requests the `storage` permission - no data leaves your browser.
 
 ## Usage
 
