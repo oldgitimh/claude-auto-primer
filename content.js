@@ -73,8 +73,11 @@
   }
 
   function isFreshChat() {
-    const path = location.pathname;
-    return path === '/new' || /^\/project\/[a-f0-9-]+$/.test(path);
+    return location.pathname === '/new';
+  }
+
+  function isProjectChat() {
+    return /^\/project\/[a-f0-9-]+\/?$/.test(location.pathname);
   }
 
   async function injectAndSend(text) {
@@ -122,22 +125,8 @@
     input.style.color = '';
   }
 
-  async function tryPrimer() {
+  async function executePrimer() {
     const primerText = getActivePrimerText();
-    if (!enabled || !primerText.trim()) {
-      return;
-    }
-    if (primedUrls.has(location.href)) {
-      return;
-    }
-    primedUrls.add(location.href);
-
-    // Small delay to let SPA finish rendering
-    await new Promise(r => setTimeout(r, 500));
-
-    if (!isFreshChat()) {
-      return;
-    }
     const profile = getActiveProfile();
     const now = new Date();
     const longDate = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -154,6 +143,42 @@
     if (profile?.autoRename) {
       await renameChat(chatName);
     }
+  }
+
+  async function tryPrimer() {
+    if (!enabled || !getActivePrimerText().trim()) {
+      return;
+    }
+    if (primedUrls.has(location.href)) {
+      return;
+    }
+
+    if (isFreshChat()) {
+      primedUrls.add(location.href);
+      // Small delay to let SPA finish rendering
+      await new Promise(r => setTimeout(r, 500));
+      await executePrimer();
+    } else if (isProjectChat()) {
+      await setupProjectPrimer();
+    }
+  }
+
+  async function setupProjectPrimer() {
+    if (primedUrls.has(location.href)) return;
+
+    let input;
+    try {
+      input = await waitForElement(SELECTORS.input);
+    } catch {
+      return;
+    }
+
+    const url = location.href;
+    input.addEventListener('pointerdown', () => {
+      if (!enabled || !getActivePrimerText().trim() || primedUrls.has(url)) return;
+      primedUrls.add(url);
+      executePrimer();
+    }, { once: true });
   }
 
   async function renameChat(newName) {
